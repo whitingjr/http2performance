@@ -4,7 +4,7 @@ import httpx
 import asyncio
 import timeit
 
-def getAndVerifyArtifact(client, httpVersion, url):
+async def getAndVerifyArtifact(client, httpVersion, url):
 		#print(url)
 		response = client.get(url)
 		#print(response.status_code, response.http_version)
@@ -14,8 +14,9 @@ def getAndVerifyArtifact(client, httpVersion, url):
 
 
 def downloadArtifacts(client, urls, httpVersion):
-	for url in urls:
-		getAndVerifyArtifact(client, httpVersion, url)
+    tasks = [asyncio.ensure_future(getAndVerifyArtifact(client, httpVersion, url)) for url in urls]
+    p = asyncio.ensure_future(progress(tasks))
+    await asyncio.gather(*tasks, p)
 
 def loadArtifactUrls(filename):
 	print("Loading test file...")
@@ -32,7 +33,7 @@ def loadArtifactUrls(filename):
 def testHttp1Performance(artifactUrls):
 	print("Testing HTTP/1.1 performance...")
 	
-	client = httpx.Client(http2=False)
+	client = httpx.AsyncClient(http2=False)
 	duration1 = timeit.timeit(lambda: downloadArtifacts(client, artifactUrls[:10], "HTTP/1.1"), number=1)
 	
 	print("Artifacts were downloaded using HTTP/1.1 in", duration1)
@@ -40,7 +41,7 @@ def testHttp1Performance(artifactUrls):
 def testHttp2Performance(artifactUrls):
 	print("Testing HTTP/2.0 performance...")
 	
-	client = httpx.Client(http2=True)
+	client = httpx.AsyncClient(http2=True)
 	duration1 = timeit.timeit(lambda: downloadArtifacts(client, artifactUrls[:10], "HTTP/2"), number=1)
 	
 	print("Artifacts were downloaded using HTTP/2.0 in", duration1)
