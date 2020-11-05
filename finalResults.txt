@@ -1,3 +1,28 @@
+[jbartece@jbartece http2performance]$ grep "HTTP/1.1 in" testResults.txt | cut -d" " -f7 
+5035
+3694
+4239
+2387
+4103
+3047
+3736
+4140
+3784
+3372
+
+[jbartece@jbartece http2performance]$ grep "HTTP/2.0 in" testResults.txt | cut -d" " -f7 
+1008
+1063
+1017
+969
+947
+964
+938
+947
+942
+923
+
+
 [jbartece@jbartece http2performance]$ grep "HTTP/1.1 in" testResults.txt | cut -d" " -f7 | ./avg.py
 3753.7
 [jbartece@jbartece http2performance]$ grep "HTTP/2.0 in" testResults.txt | cut -d" " -f7 | ./avg.py
