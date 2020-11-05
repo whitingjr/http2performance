@@ -1,0 +1,10 @@
+[jbartece@jbartece http2performance]$ grep "HTTP/1.1 in" testResults.txt | cut -d" " -f7 | ./avg.py
+3753.7
+[jbartece@jbartece http2performance]$ grep "HTTP/2.0 in" testResults.txt | cut -d" " -f7 | ./avg.py
+971.8
+
+>>> 3753.7/971.8
+3.8626260547437745
+
+
+

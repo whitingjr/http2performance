@@ -4,6 +4,8 @@ import httpx
 import asyncio
 import time
 
+limit = 100
+
 async def getAndVerifyArtifact(client, httpVersion, url):
 		#print(url)
 		response = await client.get(url)
@@ -38,19 +40,19 @@ async def measureDownloadTime(client, artifactUrls, protocol):
 	
 
 async def testHttp1Performance(artifactUrls):
-	print("Testing HTTP/1.1 performance...")
+	print("Testing HTTP/1.1 performance with limit of", limit, "artifacts...")
 	
 	async with httpx.AsyncClient(http2=False) as client:
-		duration = await measureDownloadTime(client, artifactUrls[:100], "HTTP/1.1")
+		duration = await measureDownloadTime(client, artifactUrls[:limit], "HTTP/1.1")
 	
 	print("Artifacts were downloaded using HTTP/1.1 in", duration, "ms")
 	
 
 async def testHttp2Performance(artifactUrls):
-	print("Testing HTTP/2.0 performance...")
+	print("Testing HTTP/2.0 performance with limit of", limit, "artifacts...")
 	
 	async with httpx.AsyncClient(http2=True) as client:
-		duration = await measureDownloadTime(client, artifactUrls[:100], "HTTP/2")
+		duration = await measureDownloadTime(client, artifactUrls[:limit], "HTTP/2")
 	
 	print("Artifacts were downloaded using HTTP/2.0 in", duration, "ms")
 
@@ -60,7 +62,6 @@ if __name__ == '__main__':
 	
 	loop = asyncio.get_event_loop()
 	loop.run_until_complete(testHttp1Performance(artifactUrls))
-
+	
 	loop = asyncio.get_event_loop()
 	loop.run_until_complete(testHttp2Performance(artifactUrls))
-	
