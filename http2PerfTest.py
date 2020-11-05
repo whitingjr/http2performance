@@ -2,23 +2,21 @@
 
 import httpx
 import asyncio
-import timeit
+import time
 
 async def getAndVerifyArtifact(client, httpVersion, url):
 		#print(url)
 		response = await client.get(url)
-		#print(response.status_code, response.http_version)
 		if response.status_code != 200 or response.http_version != httpVersion:
 			print("Failed to download", url, response.status_code, response.http_version)
-		else:
-			print(response.content)
+		#else:
+		#	print(response.content)
 	
 
 
 async def downloadArtifacts(client, urls, httpVersion):
     tasks = [asyncio.ensure_future(getAndVerifyArtifact(client, httpVersion, url)) for url in urls]
-    p = asyncio.ensure_future(progress(tasks))
-    await asyncio.gather(*tasks, p)
+    await asyncio.gather(*tasks)
 
 def loadArtifactUrls(filename):
 	print("Loading test file...")
@@ -32,21 +30,29 @@ def loadArtifactUrls(filename):
 	
 	return artifactUrls
 
+async def measureDownloadTime(client, artifactUrls, protocol):
+	before = int(round(time.time() * 1000))
+	await downloadArtifacts(client, artifactUrls, protocol)
+	after = int(round(time.time() * 1000))
+	return after - before
+	
+
 async def testHttp1Performance(artifactUrls):
 	print("Testing HTTP/1.1 performance...")
 	
-	client = httpx.AsyncClient(http2=False)
-	duration1 = timeit.timeit(lambda: downloadArtifacts(client, artifactUrls[:10], "HTTP/1.1"), number=1)
+	async with httpx.AsyncClient(http2=False) as client:
+		duration = await measureDownloadTime(client, artifactUrls[:100], "HTTP/1.1")
 	
-	print("Artifacts were downloaded using HTTP/1.1 in", duration1)
+	print("Artifacts were downloaded using HTTP/1.1 in", duration, "ms")
+	
 
 async def testHttp2Performance(artifactUrls):
 	print("Testing HTTP/2.0 performance...")
 	
-	client = httpx.AsyncClient(http2=True)
-	duration1 = timeit.timeit(lambda: downloadArtifacts(client, artifactUrls[:10], "HTTP/2"), number=1)
+	async with httpx.AsyncClient(http2=True) as client:
+		duration = await measureDownloadTime(client, artifactUrls[:100], "HTTP/2")
 	
-	print("Artifacts were downloaded using HTTP/2.0 in", duration1)
+	print("Artifacts were downloaded using HTTP/2.0 in", duration, "ms")
 
 
 if __name__ == '__main__':
