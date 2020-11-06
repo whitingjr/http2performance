@@ -12,8 +12,9 @@ async def getAndVerifyArtifact(client, httpVersion, url):
 		if response.status_code != 200 or response.http_version != httpVersion:
 			print("Failed to download", url, response.status_code, response.http_version)
 		#else:
-		#	print(response.content)
-	
+			#print(response.content)
+			#if not len(response.content) == response.num_bytes_downloaded:
+			#	print("Not whole content was downloaded! Real content size:", len(response.content), ", Expected content size:", response.num_bytes_downloaded)	
 
 
 async def downloadArtifacts(client, urls, httpVersion):
