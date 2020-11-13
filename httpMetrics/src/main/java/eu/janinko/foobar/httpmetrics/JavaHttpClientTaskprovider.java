@@ -1,6 +1,5 @@
 package eu.janinko.foobar.httpmetrics;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
@@ -9,6 +8,10 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
+
+import eu.janinko.foobar.httpmetrics.jfr.event.JavaHTTP1Event;
+import eu.janinko.foobar.httpmetrics.jfr.event.JavaHTTP2Event;
+import jdk.jfr.Event;
 
 /**
  *
@@ -47,10 +50,21 @@ public class JavaHttpClientTaskprovider implements TaskProvider {
         return requests.stream().map(r -> (Callable<Long>) () -> testHttp(r)).collect(Collectors.toList());
     }
 
-    private Long testHttp(HttpRequest request) throws URISyntaxException, IOException, InterruptedException {
-        long start = System.nanoTime();
-        HttpResponse<byte[]> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-        long stop = System.nanoTime();
-        return stop - start;
+    @Override
+    public Event getRequestEvent()
+    {
+        switch (httpClient.version()) {
+        case HTTP_1_1:
+            return JavaHTTP1Event.EVENT.get();
+        case HTTP_2:
+            return JavaHTTP2Event.EVENT.get();
+        default:
+            throw new IllegalArgumentException("Unknown version");
+        }
     }
+
+    private Long testHttp(HttpRequest request) throws Exception {
+        return time( () -> httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray()), getRequestEvent() );
+    }
+
 }

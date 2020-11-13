@@ -9,11 +9,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+
+import jdk.jfr.Event;
 
 /**
  *
@@ -26,7 +29,7 @@ public class Main {
 
     private final ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
 
-    public static void main(String[] args) throws InterruptedException, IOException {
+    public static void main(String[] args) throws InterruptedException, IOException, Exception {
         Main main = new Main();
         int repeates = 1;
         if (args.length > 0) {
@@ -88,7 +91,7 @@ public class Main {
         System.out.printf("%.2f / %d = %.3f ± %.3f ms", sum, count, avg, std);
     }
 
-    public Map<TaskProvider, Double> runAllTasks(Collection<TaskProvider> providers) throws InterruptedException {
+    public Map<TaskProvider, Double> runAllTasks(Collection<TaskProvider> providers) throws Exception {
         Map<TaskProvider, Double> results = new HashMap<>();
         for (TaskProvider provider : providers) {
             results.put(provider, runTasks(provider));
@@ -96,9 +99,11 @@ public class Main {
         return results;
     }
 
-    public double runTasks(TaskProvider provider) throws InterruptedException {
-        List<Future<Long>> htttp1results = executorService.invokeAll(provider.getTasks());
-        final List<Long> results = await(htttp1results);
+    public double runTasks(TaskProvider provider) throws Exception {
+        final List<Long> results = time ( () -> {
+            final List<Future<Long>> htttp1results = executorService.invokeAll(provider.getTasks());
+            return await(htttp1results);
+        }, provider.getProviderEvent());
         final double result = average(results);
 
         System.out.printf("%s measurements: %.3f ms %n", provider.getName(), result);
@@ -113,5 +118,22 @@ public class Main {
                 throw new RuntimeException(ex);
             }
         }).collect(Collectors.toList());
+    }
+
+    private List<Long> time(Callable<List<Long>> c, Event e) throws Exception {
+        final boolean isEnabled = e.isEnabled();
+        if (isEnabled) {
+            e.begin();
+        }
+        try {
+            return c.call();
+        } finally {
+            if (isEnabled) {
+                e.end();
+                if (e.shouldCommit()) {
+                    e.commit();
+                }
+            }
+        }
     }
 }
