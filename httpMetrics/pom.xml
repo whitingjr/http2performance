@@ -50,5 +50,10 @@
             <version>5.0.1</version>
             <type>jar</type>
         </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents.core5</groupId>
+            <artifactId>httpcore5</artifactId>
+            <version>5.1-beta1</version>
+        </dependency>
     </dependencies>
 </project>

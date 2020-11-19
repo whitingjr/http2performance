@@ -24,8 +24,8 @@ import jdk.jfr.Event;
  */
 public class Main {
 
-    private static final int THREAD_POOL_SIZE = 25; // How much threads are in the task pool
-    private static final int LIMIT = 100; // How much lines from the input to read
+    private static final int THREAD_POOL_SIZE = 1; // How much threads are in the task pool
+    private static final int LIMIT = 20; // How much lines from the input to read
 
     private final ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
 
@@ -39,9 +39,9 @@ public class Main {
         List<String> urls = Files.lines(Paths.get("centralUrls.txt")).limit(LIMIT).collect(Collectors.toList());
 
         List<TaskProvider> providers = new ArrayList<>();
-        providers.add(new JavaHttpClientTaskprovider(urls, HttpClient.Version.HTTP_1_1));
-        providers.add(new JavaHttpClientTaskprovider(urls, HttpClient.Version.HTTP_2));
-        providers.add(new Appache11TaskProvider(urls));
+//        providers.add(new JavaHttpClientTaskprovider(urls, HttpClient.Version.HTTP_1_1));
+//        providers.add(new JavaHttpClientTaskprovider(urls, HttpClient.Version.HTTP_2));
+//        providers.add(new Appache11TaskProvider(urls));
         providers.add(new Appache2TaskProvider(urls));
 
         Map<TaskProvider, List<Double>> averages = new HashMap<>();

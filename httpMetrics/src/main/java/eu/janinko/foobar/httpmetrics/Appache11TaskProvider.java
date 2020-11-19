@@ -33,7 +33,10 @@ public class Appache11TaskProvider implements TaskProvider {
     }
 
     private Long testHttp(HttpUriRequest request) throws Exception {
-        return time ( () -> httpClient.execute(request, basicResponseHandler), getRequestEvent());
+        return time ( () -> {
+            httpClient.execute(request, basicResponseHandler);
+            return null;
+        }, getRequestEvent());
     }
 
     @Override

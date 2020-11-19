@@ -2,6 +2,7 @@ package eu.janinko.foobar.httpmetrics;
 
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 
 import eu.janinko.foobar.httpmetrics.jfr.event.HttpImplementationEvent;
 import jdk.jfr.Event;
@@ -25,7 +26,7 @@ public interface TaskProvider {
         return e;
     }
 
-    default Long time( Callable<?> c, final Event e) 
+    default Long time( Callable<CountDownLatch> c, final Event e) 
             throws Exception {
         final boolean isEnabled = e.isEnabled();
         if (isEnabled) {
@@ -33,7 +34,8 @@ public interface TaskProvider {
         }
         try {
             long start = System.nanoTime();
-            c.call();
+            CountDownLatch latch = c.call(); // necessary for nio apis to be timed
+            if (latch != null) latch.await();
             long stop = System.nanoTime();
             return stop - start;
         } finally {
